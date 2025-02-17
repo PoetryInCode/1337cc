@@ -5,6 +5,13 @@ use warnings;
 my $vowel = qr/[aeiou]/;
 my $cons = qr/[bcdfghjklmnpqrstwxz]/;
 
+sub fixbin {
+    my $bin = $1;
+    $bin =~ tr/il/1/;
+    $bin =~ tr/o/0/;
+    return $bin
+}
+
 while (<>) {
   # Step 1: Get stupid macros out of the way (substitutions)
   s/\|-\|/h/g;
@@ -16,9 +23,9 @@ while (<>) {
   s/\b0([0-7]+)\b/__OCT[$1]OCT__/g;
 
   # Convert it to binary
-  s/__OCT\[(.*)\]OCT__/"__BIN[" . sprintf("%b", oct($1)) . "]BIN__"/eg;
+  s/__OCT\[(.*?)\]OCT__/"__BIN[" . sprintf("%b", oct($1)) . "]BIN__"/eg;
 
-  tr/0574v3/ostaue/;
+  tr/0574v36/ostaueb/;
 
   # We guess wether its an "i" or an "l" based on common english patterns
   if (/\b1($cons)/) {
@@ -33,16 +40,13 @@ while (<>) {
     s/1/l/;
   }
 
-  if (/__BIN\[(.*?)\]BIN__/) {
-    tr/li/1/;
-    tr/o/0/;
-  }
-
-  s/__BIN\[([01]+)\]BIN__/0b$1/g;
-
   s/1/i/g;
 
-  open my $cmd, "|-", "gcc -E -" or die "Failed: $!";
-  print $cmd $_;
-  close $cmd;
+  # Fix the binaries after they got mangled by 1 translations
+  s/__BIN\[(.*?)\]BIN__/ my $bin = fixbin($1); "__BIN[$bin]BIN__"/eg;
+
+  # Convert them back into a C-friendly format
+  s/__BIN\[([01]+)\]BIN__/0b$1/g;
+
+  print $_
 }
