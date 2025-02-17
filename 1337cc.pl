@@ -12,13 +12,13 @@ while (<>) {
   s/\|</k/g;
   s/vv/w/g;
 
-  # Step 3: Perform substitutions on the rest of the line
-  s/0/o/g;
-  s/5/s/g;
-  s/7/t/g;
-  s/4/a/g;
-  s/v/u/g;
-  s/3/e/g;
+  # Find and mark an octal
+  s/\b0([0-7]+)\b/__OCT[$1]OCT__/g;
+
+  # Convert it to binary
+  s/__OCT\[(.*)\]OCT__/"__BIN[" . sprintf("%b", oct($1)) . "]BIN__"/eg;
+
+  tr/0574v3/ostaue/;
 
   # We guess wether its an "i" or an "l" based on common english patterns
   if (/\b1($cons)/) {
@@ -33,8 +33,16 @@ while (<>) {
     s/1/l/;
   }
 
+  if (/__BIN\[(.*?)\]BIN__/) {
+    tr/li/1/;
+    tr/o/0/;
+  }
+
+  s/__BIN\[([01]+)\]BIN__/0b$1/g;
+
   s/1/i/g;
 
-  # Print the modified line
-  print $_;
+  open my $cmd, "|-", "gcc -E -" or die "Failed: $!";
+  print $cmd $_;
+  close $cmd;
 }
