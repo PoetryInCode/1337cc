@@ -1,7 +1,9 @@
-./main
+main
 
-./main.c
+main.c
 
-./primes
+primes
 
-./primes.c
+primes.c
+
+.#*
